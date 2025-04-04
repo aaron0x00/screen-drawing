@@ -44,6 +44,10 @@
         <input type="range" id="size" min="1" max="10" value="5">
         <button onclick="clearCanvas()">Clear</button>
         <input type="file" id="fileInput" accept="image/*">
+        <br>
+        <button onclick="setTool('draw')">Draw</button>
+        <button onclick="setTool('erase')">Eraser</button>
+        <button onclick="setTool('highlight')">Highlight</button>
     </div>
     <canvas id="drawingCanvas"></canvas>
     <script>
@@ -52,6 +56,7 @@
         const fileInput = document.getElementById("fileInput");
 
         let painting = false;
+        let currentTool = 'draw'; // Default tool is draw
 
         function startPosition(e) {
             painting = true;
@@ -65,14 +70,29 @@
 
         function draw(e) {
             if (!painting) return;
+
             ctx.lineWidth = document.getElementById("size").value;
             ctx.lineCap = "round";
-            ctx.strokeStyle = document.getElementById("color").value;
+            
+            if (currentTool === 'erase') {
+                ctx.globalCompositeOperation = 'destination-out'; // Eraser mode
+                ctx.strokeStyle = "rgba(0,0,0,1)"; // Eraser uses black color to remove
+            } else if (currentTool === 'highlight') {
+                ctx.globalCompositeOperation = 'source-over'; // Normal drawing mode
+                ctx.strokeStyle = "rgba(255, 255, 0, 0.5)"; // Highlight with yellow color
+            } else {
+                ctx.globalCompositeOperation = 'source-over'; // Normal drawing mode
+                ctx.strokeStyle = document.getElementById("color").value;
+            }
 
             ctx.lineTo(e.clientX, e.clientY);
             ctx.stroke();
             ctx.beginPath();
             ctx.moveTo(e.clientX, e.clientY);
+        }
+
+        function setTool(tool) {
+            currentTool = tool;
         }
 
         function clearCanvas() {
