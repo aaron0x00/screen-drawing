@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Standalone Drawing App</title>
+    <title>Drawing App with Background</title>
     <style>
         body {
             text-align: center;
@@ -20,7 +20,6 @@
             height: 100vh;
             border: none;
             cursor: crosshair;
-            background: white;
         }
         .toolbar {
             position: absolute;
@@ -32,6 +31,9 @@
             border-radius: 10px;
             z-index: 10;
         }
+        #fileInput {
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -41,44 +43,66 @@
         <label for="size">Brush Size:</label>
         <input type="range" id="size" min="1" max="10" value="5">
         <button onclick="clearCanvas()">Clear</button>
+        <input type="file" id="fileInput" accept="image/*">
     </div>
     <canvas id="drawingCanvas"></canvas>
     <script>
         const canvas = document.getElementById("drawingCanvas");
         const ctx = canvas.getContext("2d");
-        
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener("resize", resizeCanvas);
-        resizeCanvas();
-        
+        const fileInput = document.getElementById("fileInput");
+
         let painting = false;
-        
+
         function startPosition(e) {
             painting = true;
             draw(e);
         }
+
         function endPosition() {
             painting = false;
             ctx.beginPath();
         }
+
         function draw(e) {
             if (!painting) return;
             ctx.lineWidth = document.getElementById("size").value;
             ctx.lineCap = "round";
             ctx.strokeStyle = document.getElementById("color").value;
-            
+
             ctx.lineTo(e.clientX, e.clientY);
             ctx.stroke();
             ctx.beginPath();
             ctx.moveTo(e.clientX, e.clientY);
         }
+
         function clearCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
-        
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        fileInput.addEventListener("change", function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    const img = new Image();
+                    img.onload = function () {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear canvas before setting background
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
         canvas.addEventListener("mousedown", startPosition);
         canvas.addEventListener("mouseup", endPosition);
         canvas.addEventListener("mousemove", draw);
