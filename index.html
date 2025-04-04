@@ -3,21 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drawing App with Background</title>
+    <title>Drawing App with Scratch Costume Editor</title>
     <style>
         body {
-            text-align: center;
             font-family: Arial, sans-serif;
             margin: 0;
             overflow: hidden;
             background: black;
+            color: #fff;
         }
         canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
             border: none;
             cursor: crosshair;
         }
@@ -31,103 +26,70 @@
             border-radius: 10px;
             z-index: 10;
         }
-        #fileInput {
+        .container {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 50px;
+        }
+        .section {
+            width: 45%;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+        }
+        .container canvas {
+            margin-top: 20px;
+        }
+        #scratchTips {
+            background: #333;
+            padding: 10px;
             margin-top: 10px;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
     <div class="toolbar">
-        <label for="color">Color:</label>
-        <input type="color" id="color">
-        <label for="size">Brush Size:</label>
-        <input type="range" id="size" min="1" max="10" value="5">
-        <button onclick="clearCanvas()">Clear</button>
-        <input type="file" id="fileInput" accept="image/*">
-        <br>
         <button onclick="setTool('draw')">Draw</button>
         <button onclick="setTool('erase')">Eraser</button>
         <button onclick="setTool('highlight')">Highlight</button>
+        <button onclick="clearCanvas()">Clear Canvas</button>
+        <input type="file" id="fileInput" accept="image/*">
+        <br><br>
     </div>
-    <canvas id="drawingCanvas"></canvas>
+    
+    <div class="container">
+        <!-- Drawing App -->
+        <div class="section">
+            <h2>Drawing Canvas</h2>
+            <canvas id="drawingCanvas" width="500" height="500"></canvas>
+        </div>
+
+        <!-- Scratch Costume Editor -->
+        <div class="section">
+            <h2>Scratch Costume Editor</h2>
+            <canvas id="costumeCanvas" width="500" height="500"></canvas>
+            <div id="scratchTips">
+                <h3>Tips for Better Scratch Costumes</h3>
+                <ul>
+                    <li>Use transparent backgrounds for costumes.</li>
+                    <li>Size your costumes to fit the stage well (typically 480x360).</li>
+                    <li>Keep designs simple for better performance in Scratch.</li>
+                </ul>
+            </div>
+            <br>
+            <button onclick="downloadCostume()">Download Costume</button>
+        </div>
+    </div>
+
     <script>
-        const canvas = document.getElementById("drawingCanvas");
-        const ctx = canvas.getContext("2d");
-        const fileInput = document.getElementById("fileInput");
+        const drawingCanvas = document.getElementById('drawingCanvas');
+        const costumeCanvas = document.getElementById('costumeCanvas');
+        const drawingCtx = drawingCanvas.getContext('2d');
+        const costumeCtx = costumeCanvas.getContext('2d');
+        const fileInput = document.getElementById('fileInput');
 
         let painting = false;
         let currentTool = 'draw'; // Default tool is draw
 
-        function startPosition(e) {
-            painting = true;
-            draw(e);
-        }
-
-        function endPosition() {
-            painting = false;
-            ctx.beginPath();
-        }
-
-        function draw(e) {
-            if (!painting) return;
-
-            ctx.lineWidth = document.getElementById("size").value;
-            ctx.lineCap = "round";
-            
-            if (currentTool === 'erase') {
-                ctx.globalCompositeOperation = 'destination-out'; // Eraser mode
-                ctx.strokeStyle = "rgba(0,0,0,1)"; // Eraser uses black color to remove
-            } else if (currentTool === 'highlight') {
-                ctx.globalCompositeOperation = 'source-over'; // Normal drawing mode
-                ctx.strokeStyle = "rgba(255, 255, 0, 0.5)"; // Highlight with yellow color
-            } else {
-                ctx.globalCompositeOperation = 'source-over'; // Normal drawing mode
-                ctx.strokeStyle = document.getElementById("color").value;
-            }
-
-            ctx.lineTo(e.clientX, e.clientY);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(e.clientX, e.clientY);
-        }
-
-        function setTool(tool) {
-            currentTool = tool;
-        }
-
-        function clearCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-
-        window.addEventListener("resize", resizeCanvas);
-        resizeCanvas();
-
-        fileInput.addEventListener("change", function (e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (event) {
-                    const img = new Image();
-                    img.onload = function () {
-                        // Clear the canvas before setting the background image
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        // Draw the uploaded image as background
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    };
-                    img.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        canvas.addEventListener("mousedown", startPosition);
-        canvas.addEventListener("mouseup", endPosition);
-        canvas.addEventListener("mousemove", draw);
-    </script>
-</body>
-</html>
+        // Costume Editor Variables
